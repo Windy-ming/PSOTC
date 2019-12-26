@@ -32,7 +32,8 @@ class Clustering:
         #w采用递减的方式
         self.w=w
         self.w_step=0.5/max_iter
-        self.stop_iter_num=30
+        self.stop_iter_num=20
+        self.tolerance=1e-4
 
     def _init_particles(self):
         for i in range(self.n_particles):
@@ -73,7 +74,7 @@ class Clustering:
                 particle.pso_update(self.gbest_centroids,use_ACI=use_ACI,w=w,c1=c1,c2=c2)
             cur_fitness=self.gbest_fitness
             self._update_gbest()
-            if cur_fitness-self.gbest_fitness>1e-6 :
+            if np.linalg.norm(cur_fitness-self.gbest_fitness)>self.tolerance :
                 count=count+1
             else:
                 count=0
@@ -107,7 +108,7 @@ class Clustering:
                 self.particles[j].clpso_update(self.particles[learn].centroids,use_ACI=use_ACI,w=w-self.w_step,c=c)
             cur_fitness=self.gbest_fitness
             self._update_gbest()
-            if cur_fitness-self.gbest_fitness>1e-6 :
+            if np.linalg.norm(cur_fitness-self.gbest_fitness)>self.tolerance :
                 count=count+1
             else:
                 count=0
@@ -143,7 +144,7 @@ class Clustering:
 
             cur_fitness=self.gbest_fitness
             self._update_gbest()
-            if cur_fitness-self.gbest_fitness>1e-6 :
+            if np.linalg.norm(cur_fitness-self.gbest_fitness)>self.tolerance :
                 count=count+1
             else:
                 count=0
@@ -176,7 +177,7 @@ class Clustering:
 
             cur_fitness = self.gbest_fitness
             self._update_gbest()
-            if cur_fitness-self.gbest_fitness>1e-6 :
+            if np.linalg.norm(cur_fitness-self.gbest_fitness)>self.tolerance :
                 count=count+1
             else:
                 count=0
@@ -214,7 +215,7 @@ class Clustering:
                 self.particles[j].pso_update(gbest_centroids,use_ACI=use_ACI,w=w,c1=c1,c2=c2)
             cur_fitness=self.gbest_fitness
             self._update_gbest()
-            if cur_fitness-self.gbest_fitness>1e-6 :
+            if np.linalg.norm(cur_fitness-self.gbest_fitness)>self.tolerance :
                 count=count+1
             else:
                 count=0
@@ -257,7 +258,7 @@ class Clustering:
 
             cur_fitness=self.gbest_fitness
             self._update_gbest()
-            if cur_fitness-self.gbest_fitness>1e-6 :
+            if np.linalg.norm(cur_fitness-self.gbest_fitness)>self.tolerance :
                 count=count+1
             else:
                 count=0
@@ -268,7 +269,7 @@ class Clustering:
             if i % self.print_debug == 0:
                 print('Iter {:04d}/{:04d} current cluster fitness: {:.4f}, ARI:{:.4f}'
                       .format(i + 1, self.max_iter,self.gbest_fitness,ari))
-        print('Finish {:04d}/{:04d} opt cluster fitness: {:.4f}, ARI:{:.4f}::'
+        print('Finish {:04d}/{:04d} opt cluster fitness: {:.4f}, ARI:{:.4f}'
               .format(i + 1, self.max_iter,self.gbest_fitness,ari))
         return self.gbest_fitness, self.gbest_cluster, self.gbest_centroids, iter_result
 
@@ -297,7 +298,7 @@ class Clustering:
 
             cur_fitness=self.gbest_fitness
             self._update_gbest()
-            if cur_fitness-self.gbest_fitness>1e-6 :
+            if np.linalg.norm(cur_fitness-self.gbest_fitness)>self.tolerance :
                 count=count+1
             else:
                 count=0
@@ -308,7 +309,7 @@ class Clustering:
             if i % self.print_debug == 0:
                 print('Iter {:04d}/{:04d} current cluster fitness: {:.4f}, ARI:{:.4f}:'
                       .format(i + 1, self.max_iter,self.gbest_fitness,ari))
-        print('Finish {:04d}/{:04d} opt cluster fitness: {:.4f}, ARI:{:.4f}::'
+        print('Finish {:04d}/{:04d} opt cluster fitness: {:.4f}, ARI:{:.4f}'
               .format(i + 1, self.max_iter,self.gbest_fitness,ari))
         return self.gbest_fitness, self.gbest_cluster, self.gbest_centroids, iter_result
 
@@ -332,7 +333,7 @@ class Clustering:
 
             cur_fitness=self.gbest_fitness
             self._update_gbest()
-            if cur_fitness-self.gbest_fitness>1e-6 :
+            if np.linalg.norm(cur_fitness-self.gbest_fitness)>self.tolerance :
                 count=count+1
             else:
                 count=0
@@ -343,7 +344,7 @@ class Clustering:
             if i % self.print_debug == 0:
                 print('Iter {:04d}/{:04d} current cluster fitness: {:.4f}, ARI:{:.4f}:'
                       .format(i + 1, self.max_iter,self.gbest_fitness,ari))
-        print('Finish {:04d}/{:04d} opt cluster fitness: {:.4f}, ARI:{:.4f}::'
+        print('Finish {:04d}/{:04d} opt cluster fitness: {:.4f}, ARI:{:.4f}'
               .format(i + 1, self.max_iter,self.gbest_fitness,ari))
         return self.gbest_fitness, self.gbest_cluster, self.gbest_centroids, iter_result
 
@@ -375,7 +376,7 @@ class Clustering:
             if i % self.print_debug == 0:
                 print('Iter {:04d}/{:04d} current cluster fitness: {:.4f}, ARI:{:.4f}:'
                       .format(i + 1, self.max_iter,self.gbest_fitness,ari))
-        print('Finish {:04d}/{:04d} opt cluster fitness: {:.4f}, ARI:{:.4f}::'
+        print('Finish {:04d}/{:04d} opt cluster fitness: {:.4f}, ARI:{:.4f}'
               .format(i + 1, self.max_iter,self.gbest_fitness,ari))
         return self.gbest_fitness, self.gbest_cluster, self.gbest_centroids, iter_result
 
@@ -440,7 +441,6 @@ if __name__ == "__main__":
     sorted_nums = sorted(enumerate(nums), key=lambda x: x[1])
     idx = [i[0] for i in sorted_nums]
     nums = [i[1] for i in sorted_nums]
-
     c=np.where(np.array(nums)>9)
     print(type(c))
     print(nums[nums>7])

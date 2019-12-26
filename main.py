@@ -160,6 +160,16 @@ def total_iter(file_root,dataset,method_list):
     pd.DataFrame(np.around(np.array(mean_iter_list).T, decimals=3), columns=method_list) \
         .to_csv(file_root + dataset + "/" + dataset + "_mean_iter.csv")
 
+def get_total_result():
+    method_list = ["K-means", "K-means++", "PSO", "ACI-PSO","DE-subpop", "ACI-DE-subpop", "DE-PSO",
+                   "ACI-DE-PSO"]  # "KQPSO","KDEPSO"
+    # file_root="G:\\wmf\\report\\12-25\\result-TC\\DE-PSO-1\\"
+    m_list=method_list[6:8]
+
+    get_result(file_root, m_list, dataset_range, cluster_index[:4], "mean")
+    get_result(file_root, m_list, dataset_range, cluster_index[:4], "std")
+    get_result(file_root, m_list, dataset_range, cluster_index[:4], "max")
+
 
 #PSO参数：惯性权重(w),学习因子（c1,c2）
 w=0.9
@@ -186,7 +196,7 @@ datasets1 = ["three_Ren","half_ring","two-rings","RING-GAUSSIAN",   #非凸结�
 cluster_index=["F","ARI","v_measure","FMI","f1-measure","MI","purity","CH","run_time"]
 file_root=r"dataset/"
 dataset_range=[1,2,3]     #数据集的测试范围
-method_range=[9]         #测试的算法范围
+method_range=[9]          #测试的算法范围
 ######################################
 def main(dataset_range,trail=20,n_particles=20,use_kmeans=False,is_shuff=False):
     for data_id in dataset_range:
@@ -194,6 +204,8 @@ def main(dataset_range,trail=20,n_particles=20,use_kmeans=False,is_shuff=False):
         max_test_doc_num=100
         low_words_num=30
         up_words_num=1e9
+        # max_iter=max_iter_list[data_id]
+        max_iter=150
         file_rootrr="result" + str(max_test_doc_num) + "-" + str(low_words_num) + "/"
         pathrr = file_rootrr + datasets[data_id]+"/"
         mkdir(pathrr) ######################################
@@ -231,12 +243,12 @@ def main(dataset_range,trail=20,n_particles=20,use_kmeans=False,is_shuff=False):
         for method_id in method_range:
             use_ACI = False
             method_list.append(method_dic[method_id])
-            opt_algo(pathrr,n_cluster,data,labels,method_id,data_id,use_ACI,use_kmeans,trail,n_particles,max_iter_list[data_id])
+            opt_algo(pathrr,n_cluster,data,labels,method_id,data_id,use_ACI,use_kmeans,trail,n_particles,max_iter)
 
             if method_id>=2:
                 use_ACI = True
-                method_list.append("ACI-"+method_dic[method_id])
-                opt_algo(pathrr,n_cluster, data, labels, method_id, data_id,use_ACI,use_kmeans,trail,n_particles,max_iter_list[data_id])
+                method_list.append("ACIA-"+method_dic[method_id])
+                opt_algo(pathrr,n_cluster, data, labels, method_id, data_id,use_ACI,use_kmeans,trail,n_particles,max_iter)
 
     # get the opt/men iter and mean,std,max of total result
     total_iter(file_rootrr, datasets[data_id], method_list)
@@ -248,7 +260,7 @@ if __name__ == "__main__":
     print("test start time：",time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
     main(dataset_range)
     print("test end time：",time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
-
+    # get_total_result()
 
 
 
