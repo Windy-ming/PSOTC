@@ -8,6 +8,23 @@ from index import reset_centroids, assign_cluster, update_centroids, cal_fitness
     cal_similar
 
 
+def k_means_localSearch( data, centroids, n_cluster):
+    for i in range(1e10):
+        new_centroids = centroids.copy()
+        new_cluster = assign_cluster(new_centroids, data)
+        centroids = update_centroids(n_cluster, new_cluster, data)
+        diff = np.abs(centroids - new_centroids).sum()
+        if np.abs(centroids - new_centroids).sum() < 1e-8:
+            break
+    fitness = cal_fitness(new_centroids, new_cluster, data)
+    return fitness, new_centroids, new_cluster
+
+
+def re_adjust_centroids( centroids):
+    new_centroids = sorted(centroids, key=lambda x: [x[i] for i in range(centroids.shape[1])])
+    return np.array(new_centroids)
+
+
 class Particle:
     def __init__(self,
                  n_cluster: int,
@@ -26,7 +43,7 @@ class Particle:
             self.centroids=kmeans.centroids
             print("use-kmeans",use_kmeans)
         else:
-            self.centroids = self.init_centroids2(data,n_cluster)
+            self.centroids = self.init_centroids4(data,n_cluster)
 
         self.cluster = assign_cluster(self.centroids,data)
         self.centroids = update_centroids(self.n_cluster, self.cluster, data)
@@ -51,10 +68,10 @@ class Particle:
         min_val=np.min(data,axis=0)
         centroids = np.array([[random.uniform(min_val[i], max_val[i]) for i in range(data.shape[1])] for j in range(n_cluster)])
         return centroids
-    def init_centroids4(self,data,n_cluster,n,distanceMeasure=0):
+    def init_centroids4(self,data,n_cluster,n=20,distanceMeasure=0):
         centroids=[]
         centroids.append(np.random.sample(data,1))
-        for _ in range(n_cluster):
+        for _ in range(n_cluster-1):
             swarm=np.random.sample(data,n)
             dist=[]
             for sample in swarm:
@@ -96,20 +113,6 @@ class Particle:
             centroids.append(list(random.choice(data[idx])))
         # print(centroids)
         return np.array(centroids)
-
-    def k_means_localSearch(self,data,centroids,n_cluster):
-        for i in range(1e10):
-            new_centroids = centroids.copy()
-            new_cluster = assign_cluster(new_centroids, data)
-            centroids = update_centroids(n_cluster, new_cluster, data)
-            diff = np.abs(centroids - new_centroids).sum()
-            if np.abs(centroids - new_centroids).sum() < 1e-8:
-                break
-        fitness = cal_fitness(new_centroids, new_cluster, self.data)
-        return fitness,new_centroids,new_cluster
-    def re_adjust_centroids(self,centroids):
-        new_centroids=sorted(centroids, key=lambda x: [x[i] for i in range(centroids.shape[1])])
-        return np.array(new_centroids)
 
     def calc_fitness(self, data,assign_version=0):
         #划分样本并计算评价函数，个体聚类中心也随之更新
