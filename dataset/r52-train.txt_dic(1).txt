@@ -1,0 +1,16 @@
+file_name: r52-train.txt
+max_test_doc_num: 100
+low_words_num: 30
+total_docs: 6532
+words no enough count: 126
+words enough count: 6406
+max len for one document: 525
+NO. of documents: 468
+n_cluster: 5
+shape pf tfidf_matrix: (468, 6369)
+NO. of documents group by topic: 
+coffee: 85
+crude: 100
+interest: 100
+sugar: 83
+trade: 100

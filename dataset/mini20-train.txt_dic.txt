@@ -1,0 +1,31 @@
+file_name: mini20-train.txt
+max_test_doc_num: 100
+low_words_num: 0
+total_docs: 1334
+words no enough count: 1
+words enough count: 1333
+max len for one document: 5046
+NO. of documents: 1333
+n_cluster: 20
+shape pf tfidf_matrix: (1333, 19527)
+NO. of documents group by topic: 
+alt.atheism: 67
+comp.graphics: 68
+comp.os.ms-windows.misc: 68
+comp.sys.ibm.pc.hardware: 71
+comp.sys.mac.hardware: 63
+comp.windows.x: 62
+misc.forsale: 60
+rec.autos: 62
+rec.motorcycles: 64
+rec.sport.baseball: 75
+rec.sport.hockey: 69
+sci.crypt: 59
+sci.electronics: 69
+sci.med: 67
+sci.space: 61
+soc.religion.christian: 75
+talk.politics.guns: 68
+talk.politics.mideast: 68
+talk.politics.misc: 73
+talk.religion.misc: 64

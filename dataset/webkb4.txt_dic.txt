@@ -1,0 +1,15 @@
+file_name: webkb4.txt
+max_test_doc_num: 100
+low_words_num: 30
+total_docs: 2803
+words no enough count: 54
+words enough count: 2749
+max len for one document: 2026
+NO. of documents: 400
+n_cluster: 4
+shape pf tfidf_matrix: (400, 5070)
+NO. of documents group by topic: 
+project: 100
+course: 100
+faculty: 100
+student: 100
