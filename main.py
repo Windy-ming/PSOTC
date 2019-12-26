@@ -186,7 +186,7 @@ datasets1 = ["three_Ren","half_ring","two-rings","RING-GAUSSIAN",   #非凸结�
 cluster_index=["F","ARI","v_measure","FMI","f1-measure","MI","purity","CH","run_time"]
 file_root=r"dataset/"
 dataset_range=[1,2,3]     #数据集的测试范围
-method_range=[11]         #测试的算法范围
+method_range=[9]         #测试的算法范围
 ######################################
 def main(dataset_range,trail=20,n_particles=20,use_kmeans=False,is_shuff=False):
     for data_id in dataset_range:
@@ -248,8 +248,7 @@ if __name__ == "__main__":
     print("test start time：",time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
     main(dataset_range)
     print("test end time：",time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
-    # git test
-    # tesst min
+
 
 
 

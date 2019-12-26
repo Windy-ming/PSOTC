@@ -73,8 +73,10 @@ class Clustering:
                 particle.pso_update(self.gbest_centroids,use_ACI=use_ACI,w=w,c1=c1,c2=c2)
             cur_fitness=self.gbest_fitness
             self._update_gbest()
-            if cur_fitness-self.gbest_fitness<1e-6 :
+            if cur_fitness-self.gbest_fitness>1e-6 :
                 count=count+1
+            else:
+                count=0
             if count>self.stop_iter_num:
                 break
             iter_result.append(self.gbest_fitness)
@@ -90,6 +92,7 @@ class Clustering:
     def clpso_run(self,w,c,use_ACI):
         iter_result = []
         print('Initial global best fitness by PSO', self.gbest_fitness)
+        count=0
         for i in range(self.max_iter):
             if use_ACI:
                 self._reset_particles()
@@ -102,7 +105,12 @@ class Clustering:
                     learn=j
                 # print(j,learn,pc)
                 self.particles[j].clpso_update(self.particles[learn].centroids,use_ACI=use_ACI,w=w-self.w_step,c=c)
+            cur_fitness=self.gbest_fitness
             self._update_gbest()
+            if cur_fitness-self.gbest_fitness>1e-6 :
+                count=count+1
+            else:
+                count=0
             iter_result.append(self.gbest_fitness)
             ari=adjusted_rand_score(self.labels, self.gbest_cluster)
 
@@ -112,7 +120,6 @@ class Clustering:
         print('Finish {:04d}/{:04d} opt cluster fitness: {:.4f}, ARI:{:.4f}'
               .format(i + 1, self.max_iter,self.gbest_fitness, ari))
         return self.gbest_fitness, self.gbest_cluster, self.gbest_centroids, iter_result
-
 
     def de_run(self,CR,F,use_ACI,method_type="de_rand"):
         iter_result=[]
@@ -136,8 +143,10 @@ class Clustering:
 
             cur_fitness=self.gbest_fitness
             self._update_gbest()
-            if cur_fitness-self.gbest_fitness<1e-6 :
+            if cur_fitness-self.gbest_fitness>1e-6 :
                 count=count+1
+            else:
+                count=0
             if count>self.stop_iter_num:
                 break
             iter_result.append(self.gbest_fitness)
@@ -167,8 +176,10 @@ class Clustering:
 
             cur_fitness = self.gbest_fitness
             self._update_gbest()
-            if cur_fitness - self.gbest_fitness < 1e-6:
-                count = count + 1
+            if cur_fitness-self.gbest_fitness>1e-6 :
+                count=count+1
+            else:
+                count=0
             if count > self.stop_iter_num:
                 break
             ari = adjusted_rand_score(self.labels, self.gbest_cluster)
@@ -203,8 +214,10 @@ class Clustering:
                 self.particles[j].pso_update(gbest_centroids,use_ACI=use_ACI,w=w,c1=c1,c2=c2)
             cur_fitness=self.gbest_fitness
             self._update_gbest()
-            if cur_fitness-self.gbest_fitness<1e-6 :
+            if cur_fitness-self.gbest_fitness>1e-6 :
                 count=count+1
+            else:
+                count=0
             if count>self.stop_iter_num:
                 break
             iter_result.append(self.gbest_fitness)
@@ -231,13 +244,23 @@ class Clustering:
             swarm1=self.particles[:k]
             swarm2=self.particles[k:]
             for j in range(k):
-                sample_position = random.sample(swarm1, 2) if j<k else random.sample(swarm2, 2)
+                if j<k:
+                    id_list = list(range(k))
+                    id_list.remove(j)
+                    id_list = random.sample(id_list, 2)
+                else:
+                    id_list = list(range(k,self.n_particles))
+                    id_list.remove(j)
+                    id_list = random.sample(id_list, 2)
+                sample_position = [self.particles[t] for t in id_list]
                 self.particles[j].de_best_update(sample_position, use_ACI=use_ACI, CR=CR, F=F)
 
             cur_fitness=self.gbest_fitness
             self._update_gbest()
-            if cur_fitness-self.gbest_fitness<1e-6 :
+            if cur_fitness-self.gbest_fitness>1e-6 :
                 count=count+1
+            else:
+                count=0
             if count>self.stop_iter_num:
                 break
             iter_result.append(self.gbest_fitness)
@@ -274,8 +297,10 @@ class Clustering:
 
             cur_fitness=self.gbest_fitness
             self._update_gbest()
-            if cur_fitness-self.gbest_fitness<1e-6 :
+            if cur_fitness-self.gbest_fitness>1e-6 :
                 count=count+1
+            else:
+                count=0
             if count>self.stop_iter_num:
                 break
             iter_result.append(self.gbest_fitness)
@@ -286,6 +311,7 @@ class Clustering:
         print('Finish {:04d}/{:04d} opt cluster fitness: {:.4f}, ARI:{:.4f}::'
               .format(i + 1, self.max_iter,self.gbest_fitness,ari))
         return self.gbest_fitness, self.gbest_cluster, self.gbest_centroids, iter_result
+
     def pso_de_run_Subpopulation1(self,w,c1,c2,CR,F,use_ACI,pro,method_type="de_best"):
         iter_result=[]
         k=int(pro*self.n_particles)
@@ -306,8 +332,10 @@ class Clustering:
 
             cur_fitness=self.gbest_fitness
             self._update_gbest()
-            if cur_fitness-self.gbest_fitness<1e-6 :
+            if cur_fitness-self.gbest_fitness>1e-6 :
                 count=count+1
+            else:
+                count=0
             if count>self.stop_iter_num:
                 break
             iter_result.append(self.gbest_fitness)
