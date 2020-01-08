@@ -1,7 +1,7 @@
 import random
 import numpy as np
 from sklearn.metrics import *
-from particle import Particle, re_adjust_centroids, k_means_localSearch
+from particle import Particle
 from index import reset_centroids, cal_cluster_result, update_centroids, assign_cluster, CH_index, cal_disXX, max_index
 
 
@@ -32,8 +32,8 @@ class Clustering:
         #w采用递减的方式
         self.w=w
         self.w_step=0.5/max_iter
-        self.stop_iter_num=20
-        self.tolerance=1e-4
+        self.stop_iter_num=30
+        self.tolerance=1e-6
 
     def _init_particles(self):
         for i in range(self.n_particles):
@@ -130,21 +130,25 @@ class Clustering:
             if use_ACI:
                 for particle in self.particles:
                     particle.centroids=reset_centroids(particle.centroids, self.gbest_centroids)
-                    particle.centroids=re_adjust_centroids(particle.centroids)
+
             for j in range(self.n_particles):
-                id_list=list(range(self.n_particles))
-                id_list.remove(j)
                 if method_type=="de_rand":
-                    id_list=random.sample(id_list,3)
-                    sample_position=[self.particles[k] for k in id_list]
+                    if i % (self.print_debug/2)  ==0:
+                        id_list = list(range(self.n_particles))
+                        id_list.remove(j)
+                        id_list=random.sample(id_list,3)
+                        sample_position=[self.particles[k] for k in id_list]
+                    # print(sample_position[0].centroids)
                     self.particles[j].de_rand_update(sample_position,use_ACI=use_ACI,CR=CR,F=F)
                 else:
-                    id_list = random.sample(id_list, 2)
-                    sample_position = [self.particles[i] for i in id_list]
+                    if i % (self.print_debug/2)  ==0:
+                        id_list = list(range(self.n_particles))
+                        id_list.remove(j)
+                        id_list = random.sample(id_list, 2)
+                        sample_position = [self.particles[k] for k in id_list]
                     self.particles[j].de_best_update(sample_position, use_ACI=use_ACI, CR=CR, F=F)
 
             cur_fitness=self.gbest_fitness
-            self.gbest_fitness,self.gbest_centroids,self.gbest_cluster=k_means_localSearch(self.data,self.gbest_centroids,self.n_cluster)
             self._update_gbest()
             if np.linalg.norm(cur_fitness-self.gbest_fitness)<self.tolerance :
                 count=count+1
@@ -186,6 +190,7 @@ class Clustering:
             if count > self.stop_iter_num:
                 break
             ari = adjusted_rand_score(self.labels, self.gbest_cluster)
+            iter_result.append(self.gbest_fitness)
 
             if i % self.print_debug == 0:
                 print('Iter {:04d}/{:04d} current cluster fitness: {:.4f}, ARI:{:.4f}'
@@ -290,13 +295,19 @@ class Clustering:
             swarm1=self.particles[:k]
             swarm2=self.particles[k:]
 
-            for particle in range(self.n_particles[:k]):
+            for particle in swarm1:
                 self.gbest_centroids=self.particles[k-1].best_centroids
+                if use_ACI:
+                    particle.centroids = reset_centroids(particle.centroids, self.gbest_centroids)
                 particle.pso_update(self.gbest_centroids,use_ACI=use_ACI,w=w,c1=c1,c2=c2)
 
-            for particle in range(self.n_particles[k:]):
-                sample_position = random.sample(swarm2, 2)
-                particle.de_best_update(sample_position, use_ACI=use_ACI, CR=CR, F=F)
+            for j in range(k,self.n_particles):
+                id_list = list(range(k, self.n_particles))
+                id_list.remove(j)
+                id_list = random.sample(id_list, 2)
+                sample_position = [self.particles[t] for t in id_list]
+                # sample_position = random.sample(swarm2, 2)
+                self.particles[j].de_best_update(sample_position, use_ACI=use_ACI, CR=CR, F=F)
 
             cur_fitness=self.gbest_fitness
             self._update_gbest()
@@ -384,30 +395,34 @@ class Clustering:
 
     def qpso_run(self,alpha,use_ACI):
         print('Initial global best fitness by QPSO', self.gbest_fitness)
-        iter_cluster_result=[]
         iter_result=[]
+        count=0
         for i in range(self.max_iter):
-            # self._reset_particles()
-            self.mean_particle_position = np.mean(np.array([particle.best_position for particle in self.particles]), axis=0)
-            # self.mean_particle_position=reset_centroids(self.mean_particle_position,self.gbest_centroids)
-            for particle in self.particles:
-                particle.QPSO_update(self.gbest_centroids, self.mean_particle_position,use_ACI=use_ACI,alpha=alpha)
-                #print(i, particle.best_fitness, self.gbest_fitness)
-            self._update_gbest()
-            iter_result.append(self.gbest_fitness)
-            opt_centroids = update_centroids( self.n_cluster,self.labels,self.data)
-            centroids = reset_centroids(self.gbest_centroids, opt_centroids)
-            clusters = assign_cluster(centroids, self.data)
-            cluster_result=cal_cluster_result(self.gbest_fitness, clusters,self.labels)
-            iter_cluster_result.append(cluster_result)
+            self.mean_particle_position = np.mean(np.array([particle.best_centroids for particle in self.particles]), axis=0)
 
-            # if i % self.print_debug == 0:
-            # print('Iter {:04d}/{:04d} current cluster result {.5f}:'.format(i + 1, self.max_iter,cluster_result))
-            # print(cluster_result)
-        # print('Finish {:04d}/{:04d} opt cluster result {.5f}:'.format(i + 1, self.max_iter,cluster_result))
-        iter_cluster_result = np.array(iter_cluster_result)
-        # np.savetxt("QPSO_iter_result.csv", iter_cluster_result, delimiter="\t", fmt="%.3f")
-        return self.gbest_fitness, self.gbest_cluster, self.gbest_centroids,iter_result, np.max(iter_cluster_result[1:],axis=0)
+            if use_ACI:
+                self._reset_particles()
+                self.mean_particle_position=reset_centroids(self.mean_particle_position,self.gbest_centroids)
+
+            for particle in self.particles:
+                particle.qpso_update(self.gbest_centroids, self.mean_particle_position,use_ACI=use_ACI,alpha=alpha)
+                #print(i, particle.best_fitness, self.gbest_fitness)
+            cur_fitness = self.gbest_fitness
+            self._update_gbest()
+            if np.linalg.norm(cur_fitness - self.gbest_fitness) < self.tolerance:
+                count = count + 1
+            else:
+                count = 0
+            if count > self.stop_iter_num:
+                break
+            iter_result.append(self.gbest_fitness)
+            ari = adjusted_rand_score(self.labels, self.gbest_cluster)
+            if i % self.print_debug == 0:
+                print('Iter {:04d}/{:04d} current cluster fitness: {:.4f}, ARI:{:.4f}'
+                      .format(i + 1, self.max_iter, self.gbest_fitness, ari))
+        print('Finish {:04d}/{:04d} opt cluster fitness: {:.4f}, ARI:{:.4f}'
+              .format(i + 1, self.max_iter, self.gbest_fitness, ari))
+        return self.gbest_fitness, self.gbest_cluster, self.gbest_centroids, iter_result
 
     def de_qpso_run(self,alpha,CR,F,use_ACI):
         iter_result=[]

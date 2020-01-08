@@ -8,7 +8,7 @@ from index import reset_centroids, assign_cluster, update_centroids, cal_fitness
     cal_similar
 
 
-def k_means_localSearch( data, centroids, n_cluster):
+def k_means_localSearch(self, data, centroids, n_cluster):
     for i in range(1e10):
         new_centroids = centroids.copy()
         new_cluster = assign_cluster(new_centroids, data)
@@ -16,14 +16,13 @@ def k_means_localSearch( data, centroids, n_cluster):
         diff = np.abs(centroids - new_centroids).sum()
         if np.abs(centroids - new_centroids).sum() < 1e-8:
             break
-    fitness = cal_fitness(new_centroids, new_cluster, data)
+    fitness = cal_fitness(new_centroids, new_cluster, self.data)
     return fitness, new_centroids, new_cluster
 
 
-def re_adjust_centroids( centroids):
+def re_adjust_centroids(self, centroids):
     new_centroids = sorted(centroids, key=lambda x: [x[i] for i in range(centroids.shape[1])])
     return np.array(new_centroids)
-
 
 class Particle:
     def __init__(self,
@@ -43,7 +42,7 @@ class Particle:
             self.centroids=kmeans.centroids
             print("use-kmeans",use_kmeans)
         else:
-            self.centroids = self.init_centroids4(data,n_cluster)
+            self.centroids = self.init_centroids(data,n_cluster)
 
         self.cluster = assign_cluster(self.centroids,data)
         self.centroids = update_centroids(self.n_cluster, self.cluster, data)
@@ -68,10 +67,10 @@ class Particle:
         min_val=np.min(data,axis=0)
         centroids = np.array([[random.uniform(min_val[i], max_val[i]) for i in range(data.shape[1])] for j in range(n_cluster)])
         return centroids
-    def init_centroids4(self,data,n_cluster,n=20,distanceMeasure=0):
+    def init_centroids4(self,data,n_cluster,n,distanceMeasure=0):
         centroids=[]
         centroids.append(np.random.sample(data,1))
-        for _ in range(n_cluster-1):
+        for _ in range(n_cluster):
             swarm=np.random.sample(data,n)
             dist=[]
             for sample in swarm:
@@ -110,6 +109,7 @@ class Particle:
             # k=random.sample(idx[0],1)
             # print(k)
             # centroids.append(data[k])
+            # print(len(data[idx]))
             centroids.append(list(random.choice(data[idx])))
         # print(centroids)
         return np.array(centroids)
@@ -143,9 +143,9 @@ class Particle:
 
     def pso_update(self, gbest_centroids, use_ACI,  w, c1, c2):
         v_old = w * self.velocity.copy()
-        # if use_ACI:
-            # self.best_centroids=reset_centroids(self.best_centroids,self.centroids)
-            # gbest_centroids=reset_centroids(gbest_centroids,self.centroids)
+        if use_ACI:
+            self.best_centroids=reset_centroids(self.best_centroids,self.centroids)
+            gbest_centroids=reset_centroids(gbest_centroids,self.centroids)
 
         cognitive_component=np.zeros_like(self.centroids)  #差分向量（pbest-x）
         social_component=np.zeros_like(self.centroids)     #交叉向量（gbest-x）
@@ -238,28 +238,19 @@ class Particle:
         self.pso_cmp_update(gbest_position, use_ACI=use_ACI, w = w, c1 =c1 ,c2 = c2)
         self.de_rand_update(sample_position, use_ACI = use_ACI, CR = CR, F = F)
 
-    def qpso_update(self, gbest_position: np.ndarray,mean_best_position:np.ndarray,use_ACI,alpha):
-        attarctor1=[]
-        attarctor2=[]
+    def qpso_update(self, gbest_position,mean_best_position,use_ACI,alpha):
+        local_attractor=np.zeros_like(self.centroids)
+        delta_potentia=np.zeros_like(self.centroids)
+        if use_ACI:
+            self.best_centroids=reset_centroids(self.best_centroids, gbest_position)
+            self.centroids=reset_centroids(self.centroids, mean_best_position)
         for i in range(self.n_cluster):
-            for j in range(len(self.centroids.shape[0])):
+            for j in range(self.dim):
                 r1 = np.random.random()
-                attarctor1.append(r1 * self.best_centroids[i][j])
-                attarctor2.append((1 - r1) * gbest_position[i][j])
-        attarctor1=np.array(attarctor1)
-        attarctor2=np.array(attarctor2)
-        if use_ACI:
-            attarctor1=reset_centroids(attarctor1,attarctor2)
-        local_attractor =attarctor1+attarctor2
-        if use_ACI:
-            self.centroids=reset_centroids(self.centroids,mean_best_position)
-        delta_potentia=[]
-        cross=mean_best_position - self.centroids
-        for i in range(self.n_cluster):
-            r2 = np.random.random()
-            r2 = 1 if r2 < 0.5 else -1
-            delta_potentia.append(r2 * alpha *np.abs(cross[i])*math.log(1.0 / np.random.random()))
-        delta_potentia=np.array(delta_potentia)
+                r2 = np.random.random()
+                r2 = 1 if r2 < 0.5 else -1
+                local_attractor[i][j]=r1 * self.best_centroids[i][j]+(1 - r1) * gbest_position[i][j]
+                delta_potentia[i][j]=r2 * alpha * np.abs(mean_best_position[i][j] - self.centroids[i][j]) * math.log(1.0 / np.random.random())
 
         self.centroids = local_attractor +delta_potentia
         self.calc_fitness(self.data)

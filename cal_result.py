@@ -21,6 +21,23 @@ def calc_index(file_path,index,res_type="mean"):
         return str("%.4f" % data.mean()) + "±" + str("%.4f" % data.std())
     else:
         return list(data)
+def get_iter(file_root,method_list,dataset_range,max_iter):
+    for i in dataset_range:
+        total_result = []
+        for method in method_list:
+            file_path = file_root +method+"/"+ datasets[i] + "/" + method + "_mean_iter.txt"
+            print(file_path)
+        if not os.path.exists(file_path):
+            print("文件{}不存在，结果用0代替".format(file_path))
+        else:
+            iter_list=np.loadtxt(file_path)
+            print(iter_list)
+            while len(iter_list)<max_iter:
+                iter_list.append(iter_list[len(iter_list)-1])
+            total_result.append(iter_list)
+        df = pd.DataFrame(np.around(np.array(total_result), decimals=3), columns=method_list)
+        df.to_csv(file_root+method + "-total_mean_iter.txt")
+
 #计算数据集的各个指标的max，mean,std值
 def get_result(file_root,method_list,dataset_range,index_list,res_type):
     total_result = []
@@ -166,7 +183,7 @@ dataset_range=range(0,5)  #数据集的测试范围
 id=4
 others_id_list=[0,1,2]
 index_list=cluster_index[:4]
-p_value_test(id,others_id_list,index_list,method_list)
+# p_value_test(id,others_id_list,index_list,method_list)
 
 # box_test(index_list[:2],[0,1,2,4])
 #收敛曲线
@@ -175,8 +192,10 @@ p_value_test(id,others_id_list,index_list,method_list)
 # for i in range(0,4):
 #     print(datasets[i])
 #     total_iter(file_root, datasets[i])
-
-
+file_root= "C:/Users/Administrator/Desktop/Note/wmf/1-1/"
+method_list=["QPSO","GQPSO"]
+max_iter=150
+get_iter(file_root,method_list,range(0,5),max_iter)
 
 
 
