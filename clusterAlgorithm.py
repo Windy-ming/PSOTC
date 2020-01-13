@@ -68,9 +68,9 @@ class Clustering:
         print('Initial gbest fitness by PSO', self.gbest_fitness)
         count=0
         for i in range(self.max_iter):
-            if use_ACI:
-                self._reset_particles()
-            for particle in self.particles:
+            #if use_ACI:
+                #self._reset_particles()
+            #for particle in self.particles:
                 particle.pso_update(self.gbest_centroids,use_ACI=use_ACI,w=w,c1=c1,c2=c2)
             cur_fitness=self.gbest_fitness
             self._update_gbest()
